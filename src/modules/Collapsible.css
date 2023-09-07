@@ -1,0 +1,106 @@
+.collapsible {
+    margin-bottom: 16px;
+}
+  
+.collapsible-header{
+    cursor: pointer;
+    background-color: #FFC107;
+    padding: 8px 16px;
+    font-weight: 500;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.collapsible-header h3{
+    margin: 0;
+    font-weight: 400;
+    font-size: 16px;
+}
+
+.collapsible-header h3 span{
+    font-weight: 700;
+}
+
+.collapsible-header .fa{
+    margin-left: auto;
+}
+
+.collapsible-content {
+    background-color: #f1f1f1;
+    border: 1px solid #ccc;
+    padding: 16px;
+}
+
+.field-form {
+    display: flex;
+    flex-flow: column;
+    width: 100%;
+}
+
+.form-elements {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-elements label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.form-elements input{
+    display: block;
+    text-indent: 10px;
+    margin-bottom: 16px;
+    height: 28px;
+}
+
+.form-elements button{
+    cursor: pointer;
+    display: block;
+    width: 100%;
+    padding: 10px;
+    /* margin-bottom: 16px; */
+    border-radius: 4px;
+    border: 1px solid #4c4c4c;
+    font-weight: 600;
+    background-color: rgba(0,0,0,.8);
+    color: #fff;
+}
+
+.btnActions {
+    display: block;
+    width: 100%;
+    padding: 6px;
+    /* margin-bottom: 16px; */
+    border-radius: 2px;
+    border: 1px solid #4c4c4c;
+    font-weight: 600;
+    background-color: rgba(0,0,0,.8);
+    color: #fff;
+    font-size: 13px;
+}
+
+.form-elements button:hover{
+    background-color: #FFC107;
+    color: #000;
+    border: 1px solid #e0a900;
+}
+
+.buttonsMets {
+    display: flex;
+    flex-direction: column;
+}
+
+.buttonsMets .left, .right {
+    grid-template-columns: repeat(3, 1fr);
+    display: grid;
+    grid-gap: 8px;
+    align-items: center;
+}
+.buttonsMets .select-element {
+    height: 39px;
+    border-radius: 4px;
+}
+  
