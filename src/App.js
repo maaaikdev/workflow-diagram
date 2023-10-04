@@ -1,167 +1,173 @@
-import React, { Component } from 'react';
+import { useEffect, useState, useRef } from 'react'
 import './App.css';
-import BpmnViewerComponent from './BpmnViewer';
-import ElementComponent from './components/ElementComponent/ElementComponent';
-import { v4 as uuidv4 } from 'uuid'; // Import a library for generating unique IDs
+import BarCollapsible from './components/BarCollapsible'
+import BpmnViewerDiagram from './components/BpmnViewer';
+import {useDiagramContext} from './store/store';
 
+export default function App() {
 
+	const { elementList, currentIdElement, existElement } = useDiagramContext();
 
-class App extends Component {
+	const [ cards, setCards ] = useState([]);
 
-	constructor(props) {
-		super(props);
-		this.state = {
-			elementList: []
+	const id = "B" + crypto.randomUUID();
+
+	const childRef = useRef(null);
+
+	useEffect(() => {
+		if (childRef.current) {
+		  	childRef.current.addSystemTask();
+			childRef.current.addSystemTask();
+			childRef.current.addSystemTask();
 		}
-		this.addsystemTaskMethod = React.createRef();
-		this.createFormElement = React.createRef();
+	}, []);
 
-		const getStartEvent = {
-			id: 'startEvent_2',
-			name: 'Trigger',
-			type: 'StartEvent'
-		};
+	const bpmnXmlDiagram = `
+            <bpmn:definitions
+                xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xmlns:modeler="http://camunda.org/schema/modeler/1.0"
+                id="Definitions_1"
+                targetNamespace="http://bpmn.io/schema/bpmn"
+                exporter="Camunda Modeler"
+                exporterVersion="5.2.0"
+                modeler:executionPlatform="Camunda Platform"
+                modeler:executionPlatformVersion="7.17.0"
+                >
+                <bpmn:process id="${elementList[0].id}" name="${elementList[0].name}" isExecutable="false">
+                    <bpmn:startEvent id="${elementList[1].id}"/>
+                </bpmn:process>
+                <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+                    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="${elementList[0].id}">
+                        <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="${elementList[1].id}">
+                        <dc:Bounds x="173" y="102" width="36" height="36"/>
+                        </bpmndi:BPMNShape>
+                    </bpmndi:BPMNPlane>
+                </bpmndi:BPMNDiagram>
+            </bpmn:definitions>
+        `;
+
+	const [bpmnXml, setBpmnXml] = useState(bpmnXmlDiagram);
+  	const handleXmlChange = (xml) => {
+		setBpmnXml(xml);
+	};
+
+	const toggleComponent = (type, state) => {
+		const id = crypto.randomUUID();
+        const newSection = {
+			id: 
+				type === 'Decision' ? "decision-" + id :
+				type === 'TaskSystem' ? "task-" + id :
+				type === 'HumanTask' ? "humanTask-"+ id :
+				type === 'EndEvent' ? "endEvent-" +id :
+				"",
+            name: '',
+			type:
+				type === 'Decision' ? "Decision" :
+				type === 'TaskSystem' ? "TaskSystem" :
+				type === 'HumanTask' ? "HumanTask" :
+				type === 'EndEvent' ? "EndEvent" :
+				"",
+            topic: '',
+            index: 1,
+			title:
+				type === 'Decision' ? "Decision" :
+				type === 'TaskSystem' ? "Task" :
+				type === 'HumanTask' ? "Human Task" :
+				type === 'EndEvent' ? "End Event" :
+				"",
+        };
+		addBarCollapsible(newSection);
+	};
+
+	const addComponentDecisionParent = (elementParent) => {
+		addBarCollapsible({...elementParent, title: elementParent.type === 'Decision' ? 'Decision' : 'Task'})
+    }
+
+	const setConnectionToAddCondition = (elementParentLinkTo, linkTo, decisionElement) => {
+		const linkToElement = elementList.find(x => x.name === linkTo);
+		const conditionExpression = "${iD == 2}";
+		childRef.current.addCondition(decisionElement.id, linkToElement.id, conditionExpression, decisionElement.name);
 		
-		this.state.elementList.push(getStartEvent)
-	};
-
-	state = {
-		showDecisionComponent: false,
-	};
-
-	toggleComponent = (type, state) => {
-		this.setState(prevState => ({
-			showDecisionComponent: true,
-			type: type
-		}));
-		this.typeElement = type;
-		this.createFormElement.current.addCollapsible(type);
-	};
-
-
-	AddElementsButtons() {
-		const id = "B" + uuidv4();        	
-
-		return (
-			<div id="action-buttons-container" className="actionButtonsContainer">
-				<button id={'new-task-button-'+id} className="btnActions" onClick={() => this.toggleComponent('TaskSystem', true)}>New Task +</button>
-				<button id={'new-decision-button-'+id} className="btnActions" onClick={() => this.toggleComponent('Decision', true)}>New Decision +</button>
-				{/* <button id={'new-status-button-'+id} className="btnActions" onClick={this.toggleComponent}>New Manual Task</button>
-				<button id={'new-link-button-'+id} className="btnActions" onClick={this.toggleComponent}>New Link to</button> */}
-			</div>
-		);
 	}
 
-	handleDataReceived = (data) => {
-		console.log('Data received ====== >:', data);
-
-		let obj = {};
-		let noDuplicate = this.state.elementList.filter(o => obj[o.id] ? false : obj[o.id] = true);
-		this.elementList = noDuplicate;
-
-		console.log("ARRAY NO DUPLICATE", this.elementList)
-
-		this.elementExists = false;
-		if(this.state.elementList.filter(x => x.id === data.id).length === 0) {
-			this.state.elementList.push(data);
-		} else {
-			this.elementExists = true;
-		}
-
-		this.previousElement = this.state.elementList[this.state.elementList.length - 2].id;
-
-		this.renderBpmnComponent(this.previousElement, data);
+	const addBarCollapsible = (element) => {
+		const nuevaCard = 
+			<BarCollapsible 
+				key={cards.length} 
+				content={element} 
+				elementListSend={elementList} 
+				addBarCollapsible={addComponentDecisionParent}
+				setConnectionsToApp={setConnectionToAddCondition}
+			/>;
+		setCards(prevCards => [...prevCards, nuevaCard]);
 	}
 
-	renderBpmnComponent = (previousElement, currentlyElement) => {
-		switch (currentlyElement.type) {
+	const renderBpmnComponent = (elementList, exists) => {
+		const elementCurrent = elementList.find(element => element.id === currentIdElement);
+		const elementPrevious = elementList[elementList.length - 2].id;
+		switch (elementCurrent?.type) {
 			case 'TaskSystem':
-				this.addsystemTaskMethod.current.addSystemTask(currentlyElement, previousElement, this.elementExists);
+				childRef.current.addSystemTask(elementCurrent, elementPrevious, exists);
 				break;
 			case 'Decision':
-				this.addsystemTaskMethod.current.addDecision(currentlyElement, previousElement, this.elementExists);
+				childRef.current.addDecision(elementCurrent, elementPrevious, exists);
+				break;
+			case 'HumanTask':
+				childRef.current.addHumanTask(elementCurrent, elementPrevious, exists);
+				break;
+			case 'EndEvent':
+				childRef.current.endEventElement(elementCurrent, elementPrevious, exists);
 				break;
 			default:
 				break;
 		}
 	}
 
-	handleDataReceivedDecisionParent = (data) => {
-		console.log('Data received in Decision parent ====== >:', data);
-		this.createFormElement.current.addCollapsible(data.type);
-	}
+	useEffect(() => {
+		renderBpmnComponent(elementList, existElement);
+	}, [elementList, existElement, currentIdElement]);
 
-	render() {
 
-		const processDefinition = {
-			id: 'Process_1',
-			name: 'New_Process_Test'
-		}
-	
-		const getStartEvent = {
-			id: 'startEvent_2',
-			name: 'Trigger',
-			type: 'StartEvent'
-		}
-	
-		// const addhumanTask = {
-		// 	id: 'humanTask_1',
-		// 	name: 'Human Task 1',
-		// 	type: 'TaskHuman',
-		// 	topic: '',
-		// 	index: 1
-		// }
-	
-		// const addManualTask = {
-		// 	id: 'manualtask_1',
-		// 	name: 'Manual Task 1',
-		// 	type: 'ManualTask',
-		// 	topic: '',
-		// 	index: 1
-		// }
-	
-		// const addEndEventElement = {
-		// 	id: 'endEvent_1',
-		// 	name: 'End Event 1',
-		// 	type: 'End Event',
-		// 	topic: '',
-		// 	index: 1
-		// }
-		
-		return (
-			<div className="App">
+	return (
+		<div className="App">
 				<header className="App-header">
 					<h1>BPMN Viewer</h1>
 				</header>
 				<main>
 					<div className="Content-diagram" >
 						<div>
-							<BpmnViewerComponent 
-								process={processDefinition} 
-								startEVent={getStartEvent} 
-								ref={this.addsystemTaskMethod}
+							<BpmnViewerDiagram
+								xml={bpmnXml}
+								onXmlChange={handleXmlChange}
+								ref={childRef}
 							/>
 						</div>
 						<div>
 							<div id="formsElements">
-							
+
 								<div id="elements-container" >
-									{this.AddElementsButtons()}
-									{<ElementComponent 
-										type={this.typeElement}
-										listElement={this.state.elementList}
-										ref={this.createFormElement} 
-										onDataReceived={this.handleDataReceived}
-										getDecisionParent={this.handleDataReceivedDecisionParent}
-									/>}
+									<div id="action-buttons-container" className="actionButtonsContainer">
+										<button id={'new-task-button-'+id} className="btnActions" onClick={() => toggleComponent('TaskSystem', true)}>Task +</button>
+										<button id={'new-decision-button-'+id} className="btnActions" onClick={() => toggleComponent('Decision', true)}>Decision +</button>
+										<button id={'new-status-button-'+id} className="btnActions" onClick={() => toggleComponent('HumanTask', true)}>Manual Task +</button>
+										<button id={'new-link-button-'+id} className="btnActions" onClick={() => toggleComponent('EndEvent', true)}>Link to</button>
+									</div>
+									<div>
+										{cards.map((card, index) => (
+											<div key={index}>{card}</div>
+										))}
+									</div>
 								</div>
 							</div>
 						</div>
 					</div>
 				</main>
-			</div>
-		)
-	}
-}
+		</div>
+	)
 
-export default App;
+}

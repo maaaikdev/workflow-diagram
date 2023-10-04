@@ -1,5 +1,6 @@
 {
   "name": "diagram-bpmn",
+  "homepage": "https://maaaik.site/diagram-bpmn",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
